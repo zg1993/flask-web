@@ -1,0 +1,38 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+	<title>Flask Web</title>
+</head>
+<body>
+	<h1>Hello, {{ name|safe }}!</h1>
+	<h2>生命</h2>
+</body>
+</html> -->
+
+{% extends 'base.html' %}
+{% block title %}Index{% endblock %}
+{% block body %}
+<h1>Index!</h1>
+<h2>生命练习生-{{ name }}</h2>
+{% if not known %}
+	<p>Pleased to meet you!</p>
+	{% else %}
+	<p>Happy to see you again!</p>
+	{% endif %}
+<form method="POST">
+	{{ form.hidden_tag() }}
+	{{ form.name.label }} <br>{{ form.name }}<br>
+	{{ form.submit() }}
+</form>
+{% endblock %}
+
+
+	<p>The local date and time is {{ moment(current_time).format('LLL') }}</p>
+	<p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
+{% block page_content %}
+<div class="page-header">
+	<h1>hello, {{ name }}!</h1>
+	<h2>生命</h2>
+</div>
+{{ wtf.quick_form(form)}}
+{% endblock %}

@@ -14,7 +14,7 @@ class Config:
 	SQLALCHEMY_TRACK_MODIFICATIONS = True
 	FLASKY_MAIL_SUBJECT_PREFIX = '[Flasky]'
 	FLASKY_MAIL_SENDER = 'zhougang@kiyozawa.com'
-	FLASKY_ADMIN = os.environ.get('FLASKY_ADMIN')
+	FLASKY_ADMIN = 'zg@kiyozawa.com'
 
 
 	@staticmethod

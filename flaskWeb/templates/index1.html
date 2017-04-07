@@ -1,0 +1,29 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+	<title>Flask Web</title>
+</head>
+<body>
+	<h1>Hello, {{ name|safe }}!</h1>
+	<h2>生命</h2>
+</body>
+</html> -->
+
+{% extends 'base.html' %}
+{% block title %}Index{% endblock %}
+{% block body %}
+<h1>Index!</h1>
+<h2>生3333生11-{{ name }} form.name.data:{{form.name.data}}</h2>
+<form method="POST">
+	{{ form.hidden_tag() }}
+	{{ form.name.label }} <br>{{ form.name }}<br>
+	{{ form.submit() }}
+</form>
+{% endblock %}
+{% block page_content %}
+<div class="page-header">
+	<h1>hello, {{ name }} 222{{form.name.data}}222!</h1>
+	<h2>生命</h2>
+</div>
+{{ wtf.quick_form(form)}}
+{% endblock %}

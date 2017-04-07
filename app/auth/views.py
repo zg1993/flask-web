@@ -37,9 +37,10 @@ def logout():
 def register():
 	form = RegisterForm()
 	if form.validate_on_submit():
-		user = User(username=form.username.data,
-					password=form.password.data,
-					email=form.email.data)
+		user = User(email=form.email.data,
+					username=form.username.data,
+					password=form.password.data
+					)
 		db.session.add(user)
 		db.session.commit()
 		token = user.generate_confirmation_token()
@@ -72,10 +73,9 @@ def before_request():
 	print('into before_request...............')
 	print('is_authenticated...............{}'.format(current_user.is_authenticated))
 	print('request.endpoint[:5]...............{}'.format(request.endpoint[:5]))
-	if current_user.is_authenticated \
-			and not current_user.confirmed \
-			and request.endpoint[:5] != 'auth.'\
-			and request.endpoint != 'static':
+	if current_user.is_authenticated:
+		current_user.ping()
+		if not current_user.confirmed and request.endpoint[:5] != 'auth.' and request.endpoint != 'static':
 			return redirect(url_for('auth.unconfirmed'))
 
 
