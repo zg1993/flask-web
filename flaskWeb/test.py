@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+import time
 
 # print(datetime.utcnow())
 
@@ -14,10 +15,13 @@ import os
 # 'ssss' + 'aaaa'
 
 # print(_name__, __file__)
-# #print(os.environ.__dict__)
+# #print(os.environ.__dict__)e
 
 class A():
 	name='aa'
 
 a = A()
-print(dir(A))
+#print(type(time.time()))
+print(datetime.fromtimestamp(12123.23))
+#print(datetime.datetime.fromtimestamp(s/1000.0).strftime('%Y-%m-%d %H:%M:%S'))
+

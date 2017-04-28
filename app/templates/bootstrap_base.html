@@ -1,18 +1,26 @@
 <!DOCTYPE html>
 {% extends 'bootstrap/base.html' %}
 
+
+
+{% block title %}Flask Web{% endblock %}
+
+
+
 {% block scripts %}
 {{ super() }}
 {{ moment.include_moment() }}
+</script>
 {% endblock %}
 
-{% block title %}Flask Web{% endblock %}
+
 {% block　head %}
 {{ super() }}
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico')}}"
 	type="image/x-icon">
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico')}}"
 	type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 {% endblock %}
 {% block navbar %}
 <div class='navbar navbar-inverse' role='navigation'>

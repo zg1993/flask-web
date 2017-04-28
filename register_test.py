@@ -2,16 +2,18 @@
 #-*- coding: utf-8-*-
 
 
-from app.models import User
-from app import db
+# from app.models import User, Follow
+# from app import db
+# import random
 
-users = []
-for m, n in enumerate(range(20)):
-	user = User(username='ssb'+str(m), password=str(n), email='sss'+str(n)+'@'+str(n)+'.com')
-	users.append(user)
-db.session.add_all(users)
-db.session.commit()
+# users = User.query.all()
 
+# for index, user in enumerate(users):
+# 	for i in range(10):
+# 		user.follow(User.query.filter_by(id=random.randint(index, len(users))))
+
+
+print(range(10, 11))
 
 
 
