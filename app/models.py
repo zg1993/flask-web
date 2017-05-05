@@ -6,12 +6,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app 
+from flask import url_for
 from . import login_manager
 from datetime import datetime
 import hashlib
 from flask import request
 from markdown import markdown
 import bleach
+from app.exceptions import ValidationError
+import pdb
 
 
 class Permission:
@@ -34,11 +37,42 @@ class Comment(db.Model):
 	post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
 
 	@staticmethod
+	def generate_fake(count=100):
+		from random import seed, randint
+		import forgery_py
+
+		seed()
+		user_count = User.query.count()
+		post_count = Post.query.count()
+		for i in range(100):
+			p = Post.query.offset(randint(0, post_count-1)).first()
+			for j in range(10):
+				u = User.query.offset(randint(0, user_count-1)).first()
+				c = Comment(body=forgery_py.lorem_ipsum.sentences(randint(1, 5)),
+						timestamp=forgery_py.date.date(True),
+						author=u,
+						post=p,
+						disable=0)
+				db.session.add(c)
+				db.session.commit()
+
+	@staticmethod
 	def on_changed_body(target, value, odlvalue, initiator):
 		allowed_tags = ['a', 'abbr', 'acronym', 'b', 'code', 'em', 'i', 'strong']
 		target.body_html = bleach.linkify(bleach.clean(
 			markdown(value, output_format='html'),
 			tags=allowed_tags, strip=True))
+
+	def to_json(self):
+		json_comment = {
+			'url': url_for('api.get_comment', id=self.id, _external=True),
+			'post': url_for('api.get_post', id=self.post_id, _external=True),
+			'body': self.body,
+			'body_html': self.body_html,
+			'timestamp': self.timestamp,
+			'author': url_for('api.get_user', id=self.author_id, _external=True)
+		}
+		return json_comment
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
 
@@ -54,8 +88,6 @@ class Post(db.Model):
 	body_html = db.Column(db.Text)
 	#add comments
 	comments = db.relationship('Comment', backref='post', lazy='dynamic')
-
-
 
 
 	#create forgery data
@@ -83,6 +115,25 @@ class Post(db.Model):
 		target.body_html = bleach.linkify(bleach.clean(
 			markdown(value, output_format='html'),
 			tags=allowed_tags, strip=True))
+
+	def to_json(self):
+		json_post = {
+			'url': url_for('api.get_post', id=self.id, _external=True),
+			'body': self.body,
+			'body_html': self.body_html,
+			'timestamp': self.timestamp,
+			'author': url_for('api.get_user', id=self.author_id, _external=True),
+			'comments': url_for('api.get_post_comments', id=self.id, _external=True),
+			'comments_count': self.comments.count()
+		}
+		return json_post
+
+	@staticmethod
+	def from_json(json_post):
+		body = json_post.get('body')
+		if body is None or body == '':
+			raise ValidationError('post does not have a body')
+		return Post(body=body)
 
 db.event.listen(Post.body, 'set', Post.on_changed_body)
 
@@ -120,6 +171,7 @@ class Role(db.Model):
 			db.session.add(role)
 		db.session.commit()
 
+	
 
 #relationship table model
 class Follow(db.Model):
@@ -170,7 +222,7 @@ class User(UserMixin, db.Model):
 		if self.email is not None and self.avatar_hash is None:
 			self.avatar_hash = hashlib.md5(
 				self.email.encode('utf-8')).hexdigest()
-		print('into...User__init__')
+		#print('into...User__init__')
 		if self.role is None:
 			if self.email == current_app.config['FLASKY_ADMIN']:
 				print('__init__create admin {}'.format(current_app.config['FLASKY_ADMIN']))
@@ -178,7 +230,7 @@ class User(UserMixin, db.Model):
 				print('self.role:{}'.format(self.role))
 			if self.role is None:
 				self.role = Role.query.filter_by(default=True).first()
-		self.follow(self)
+		#self.follow(self)
 
 	def __repr__(self):
 		return '<User {}>'.format(self.username)
@@ -212,8 +264,25 @@ class User(UserMixin, db.Model):
 		db.session.add(self)
 		return True
 
+	def generate_auth_token(self, expiration):
+		s = Serializer(current_app.config['SECRET_KEY'], 
+						expires_in=expiration)
+		#a = s.dumps({'id': self.id})
+		#pdb.set_trace()
+		return s.dumps({'id': self.id}).decode()
+
+	@staticmethod
+	def verify_auth_token(token):
+		s = Serializer(current_app.config['SECRET_KEY'])
+		try:
+			data = s.loads(token)
+		except:
+			return None
+		return User.query.get(data['id'])
+
+
 	def can(self, permissions):
-		print('into can.....', self.role.permissions, permissions)
+		#print('into can.....', self.role.permissions, permissions)
 		return self.role is not None and \
 				(self.role.permissions & permissions) == permissions
 
@@ -297,6 +366,19 @@ class User(UserMixin, db.Model):
 			user.follow(user)
 			db.session.add(user)
 			db.session.commit()
+
+	def to_json(self):
+		json_user = {
+			'url': url_for('api.get_user', id=self.id, _external=True),
+			'username': self.username,
+			'member_since': self.member_since,
+			'last_seen': self.last_seen,
+			'posts': url_for('api.get_user_posts', id=self.id, _external=True),
+			'followed_posts': url_for('api.get_user_followed_posts', id=self.id, _external=True),
+			'posts_count': self.posts.count()
+		}
+		return json_user
+
 			
 
 class AnonymousUser(AnonymousUserMixin):

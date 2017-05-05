@@ -72,7 +72,8 @@ def confirm(token):
 def before_request():
 	print('into before_request...............')
 	print('is_authenticated...............{}'.format(current_user.is_authenticated))
-	print('request.endpoint[:5]...............{}'.format(request.endpoint[:5]))
+	#print('request.endpoint[:5]...............{}'.format(request.endpoint[:5]))
+	print('request................{}'.format(request))
 	if current_user.is_authenticated:
 		current_user.ping()
 		if not current_user.confirmed and request.endpoint[:5] != 'auth.' and request.endpoint != 'static':

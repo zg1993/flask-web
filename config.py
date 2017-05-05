@@ -15,6 +15,8 @@ class Config:
 	FLASKY_MAIL_SUBJECT_PREFIX = '[Flasky]'
 	FLASKY_MAIL_SENDER = 'zhougang@kiyozawa.com'
 	FLASKY_ADMIN = 'zg@kiyozawa.com'
+	FLASK_POSTS_PER_PAGE = 10
+	FLASK_COMMENTS_PER_PAGE = 15
 
 
 	@staticmethod
@@ -44,6 +46,8 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
 	SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
 		'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+	#testing model forbid CSRF projected
+	WTF_CSRF_ENABLED = False
 
 
 config = {

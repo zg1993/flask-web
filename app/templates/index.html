@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+
 {% extends 'bootstrap_base.html' %}
 {% import 'bootstrap/wtf.html' as wtf %}
-{% import '_macros.html' as macro %}
+{% import '_macros.html' as macros %}
 
 {% block scripts %}
 {{ super() }}
@@ -18,9 +18,19 @@
 	{{ wtf.quick_form(form)}}	
 	{% endif %}
 </div>
+<div class="post-tabs">
+	<ul class="nav nav-tabs">
+		<li{% if not show_followed %} class="active" {% endif %}><a href="{{ url_for('.show_all') }}">All</a></li>
+		{% if current_user.is_authenticated %}
+		<li {% if show_followed %} class="active" {% endif %}><a href="{{ url_for('.show_followed') }}">Followers</a></li>
+		{% endif %}
+	</ul>
+</div>
+
+
 {% include '_post.html'%}
 <div class="pagination">
-	{{ macro.pagination_widget(pagination, '.index') }}
+	{{ macros.pagination_widget(pagination, '.index') }}
 </div>
 {% endblock %}
 

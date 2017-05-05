@@ -37,7 +37,7 @@ def index():
 	else:
 		query = Post.query
 	pagination = query.order_by(Post.timestamp.desc()).paginate(
-		page, per_page=10,
+		page, per_page=current_user.config['FLASK_POSTS_PER_PAGE'],
 		error_out=True)
 	posts = pagination.items
 	return render_template('index.html', 
@@ -51,7 +51,7 @@ def index():
 @main.route('/all')
 @login_required
 def show_all():
-	resp = make_response(redirect(url('.index')))
+	resp = make_response(redirect(url_for('.index')))
 	resp.set_cookie('show_followed', '', max_age=30*24*60*60)
 	return resp
 
@@ -94,13 +94,13 @@ def user(username):
 	#posts = user.posts.order_by(Post.timestamp.desc()).all()
 	page = request.args.get('page', 1, type=int)
 	pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
-		page, per_page=5, error_out=False)
+		page, per_page=current_user.config['FLASK_POSTS_PER_PAGE'], error_out=False)
 	posts = pagination.items
 	return render_template('user.html', user=user, users=users, posts=posts, pagination=pagination)
 
 
 #edit user info
-@main.route('/eidt-profile', methods=['GET', 'POST'])
+@main.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
 	form = EditProfileForm()
@@ -155,12 +155,13 @@ def post(id):
 						  author=current_user._get_current_object())
 		db.session.add(comment)
 		flash('You comment has been published.')
-		#return redirect(url_for('.post', id=post.id, page=-1))
+		return redirect(url_for('.post', id=post.id, page=-1))
 	page = request.args.get('page', 1, type=int)
 	if page == -1:
-		page = (post.comments.count() - 1)/ 10 + 1
+		page = (post.comments.count() - 1)// 10 + 1
+	print("Page..............{}".format(page))
 	pagination = post.comments.order_by(Comment.timestamp.asc()).paginate(
-		page, per_page=10, error_out=True)
+		page, per_page=current_user.config['FLASK_POSTS_PER_PAGE'], error_out=True)
 	comments = pagination.items
 	return render_template('post.html', posts=[post], form=form,
 							comments=comments, pagination=pagination)
@@ -259,7 +260,7 @@ def followed_by(username):
 def moderate():
 	page = request.args.get('page', 1, type=int)
 	pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(
-		page, per_page=10, error_out=True)
+		page, per_page=current_user.config['FLASK_COMMENTS_PER_PAGE'], error_out=True)
 	comments = pagination.items
 	return render_template('moderate.html', comments=comments,
 							pagination=pagination, page=page)

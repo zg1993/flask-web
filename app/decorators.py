@@ -21,5 +21,5 @@ def permission_required(permission):
 
 
 def admin_required(f):
-	print('init admin_required')
+	#print('init admin_required')
 	return permission_required(Permission.ADMINISTER)(f)
