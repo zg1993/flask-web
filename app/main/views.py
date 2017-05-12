@@ -14,6 +14,8 @@ from flask_login import current_user
 from flask import request
 from flask import jsonify
 from flask import make_response
+from flask import current_app
+from flask_sqlalchemy import get_debug_queries
 
 
 @main.route('/', methods=['GET', 'POST'])
@@ -37,7 +39,7 @@ def index():
 	else:
 		query = Post.query
 	pagination = query.order_by(Post.timestamp.desc()).paginate(
-		page, per_page=current_user.config['FLASK_POSTS_PER_PAGE'],
+		page, per_page=current_app.config['FLASK_POSTS_PER_PAGE'],
 		error_out=True)
 	posts = pagination.items
 	return render_template('index.html', 
@@ -94,7 +96,7 @@ def user(username):
 	#posts = user.posts.order_by(Post.timestamp.desc()).all()
 	page = request.args.get('page', 1, type=int)
 	pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
-		page, per_page=current_user.config['FLASK_POSTS_PER_PAGE'], error_out=False)
+		page, per_page=current_app.config['FLASK_POSTS_PER_PAGE'], error_out=False)
 	posts = pagination.items
 	return render_template('user.html', user=user, users=users, posts=posts, pagination=pagination)
 
@@ -161,7 +163,7 @@ def post(id):
 		page = (post.comments.count() - 1)// 10 + 1
 	print("Page..............{}".format(page))
 	pagination = post.comments.order_by(Comment.timestamp.asc()).paginate(
-		page, per_page=current_user.config['FLASK_POSTS_PER_PAGE'], error_out=True)
+		page, per_page=current_app.config['FLASK_POSTS_PER_PAGE'], error_out=True)
 	comments = pagination.items
 	return render_template('post.html', posts=[post], form=form,
 							comments=comments, pagination=pagination)
@@ -260,7 +262,7 @@ def followed_by(username):
 def moderate():
 	page = request.args.get('page', 1, type=int)
 	pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(
-		page, per_page=current_user.config['FLASK_COMMENTS_PER_PAGE'], error_out=True)
+		page, per_page=current_app.config['FLASK_COMMENTS_PER_PAGE'], error_out=True)
 	comments = pagination.items
 	return render_template('moderate.html', comments=comments,
 							pagination=pagination, page=page)
@@ -290,12 +292,33 @@ def moderate_disable(id):
 							 page=request.args.get('page', 1, type=int)))			
 
 
-@main.route('/_add_numbers')
-def add_numbers():
-	a = request.args.get('a', 0, type=int)
-	b = request.args.get('b', 0, type=int)
-	return jsonify(result=a+b)
+# @main.route('/_add_numbers')
+# def add_numbers():
+# 	a = request.args.get('a', 0, type=int)
+# 	b = request.args.get('b', 0, type=int)
+# 	return jsonify(result=a+b)
 
-@main.route('/a')
-def index1():
-	return render_template('test.html')
+# @main.route('/a')
+# def index1():
+# 	return render_template('test.html')
+
+@main.route('/shutdown')
+def server_shutdown():
+	if not current_app.testing:
+		abort(404)
+	shutdown = request.environ.get('werkzeug.server.shutdown')
+	if not shutdown:
+		abort(500)
+	shutdown()
+	return 'Shutting down...'
+
+
+@main.after_app_request
+def after_app_request(response):
+	for query in get_debug_queries():
+		if query.duration > current_app.config['FLASKY_SLOW_DB_QUERY_TIME']:
+			current_app.logger.warning(
+				'Slow query: {}\nParameters: {}\nnDuration: {}\nContext: {}\n'.format(
+					query.statement, query.parameters, query.duration, query.context))
+
+	return response

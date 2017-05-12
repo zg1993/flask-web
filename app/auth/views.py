@@ -15,7 +15,9 @@ from flask_login import current_user
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
 	form = LoginForm()
+	print('into login..............{}'.format(form.email.data))
 	if form.validate_on_submit():
+		print('into validate_on_submit..............{}'.format(form.email.data))
 		user = User.query.filter_by(email=form.email.data).first()
 		if user is not None and user.verify_password(form.password.data):
 			login_user(user, form.remember_me.data)
@@ -26,6 +28,7 @@ def login():
 
 
 @auth.route('/logout')
+#login_required 只有登录了的用户才能通过（login_user(user, form.remember_me.data)）
 @login_required
 def logout():
 	logout_user()
@@ -36,11 +39,13 @@ def logout():
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
 	form = RegisterForm()
+	#print('into register..............{}'.format(form.email.data))
 	if form.validate_on_submit():
 		user = User(email=form.email.data,
 					username=form.username.data,
 					password=form.password.data
 					)
+		#print('into validate_on_submit..............{}'.format(form.email.data))
 		db.session.add(user)
 		db.session.commit()
 		token = user.generate_confirmation_token()
@@ -57,7 +62,7 @@ def confirm(token):
 	print('into confirm..............')
 	print('current_user.confirmed...............{}'.format(current_user.confirmed))
 	print('current_user.username...............{}'.format(current_user.username))
-	print('current_user.confirm...............{}'.format(current_user.confirm(token)))
+	#print('current_user.confirm...............{}'.format(current_user.confirm(token)))
 	print('is_authenticated...............{}'.format(current_user.is_authenticated))
 	if current_user.confirmed:
 		return redirect(url_for('main.home'))

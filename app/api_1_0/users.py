@@ -11,11 +11,13 @@ from ..models import User
 from flask import jsonify
 #from flask import request
 #from flask import g
+import pdb
 
 
 @api.route('/users/<int:id>')
 def get_user(id):
 	user = User.query.get_or_404(id)
+	#pdb.set_trace()
 	return jsonify(user.to_json())
 
 
